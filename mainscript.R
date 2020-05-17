@@ -11,6 +11,8 @@
   library(reshape2)
   library(data.table)
   library(dplyr)
+  library(lsa)
+  
   
   data_checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", "|", escape_double = FALSE, trim_ws = TRUE)
   data_checkins = data_checkins[-1,]
@@ -79,18 +81,15 @@
   
   # filter checkin data base from user_id wirh user freq checkin more than 10
   data.ratings <- merge(data_ratings, filter.user, data_ratings = "user_id", by.filter.user = "user_id")
-  # remove column id
   data.ratings <- subset(data.ratings, select = -c(id))
   data.ratings <- subset(data.ratings, select = -c(freq))
   
   # filter checkin data base from venue frequency more than 5 check-ins
   data.ratings <- merge(data.ratings, filter.venue, data.ratings = "venue_id", by.filter.venue = "venue_id")
-  # remove column freq
   data.ratings <- subset(data.ratings, select = -c(freq))
   
   # filter checkin data base from socialgraph frequency more than 30 contract
   data.ratings <- merge(data.ratings, filter.socialgraph, data.ratings = "user_id", by.filter.socialgraph = "user_id")
-  # remove column freq
   data.ratings <- subset(data.ratings, select = -c(freq))
   
   # Add prefix to id
@@ -98,6 +97,12 @@
   data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
   # change column name
   colnames(data.ratings) <- c("user_id", "venue_id", "rating")
-
-  df.rating <- as.data.frame(acast(data.ratings, user_id~venue_id, value.var="rating"))
+  visualize_ratings(data.ratings = ratings)
+  
+  
+  ### Louvain algorithm and user characteristic based CF (LC)
+  # similarity
+  w <- as.data.frame(acast(data.ratings, venue_id~user_id,  value.var="rating"))
+  # set na value to zero
+  w[is.na(w)] <- 0
   
