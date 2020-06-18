@@ -1,0 +1,25 @@
+{
+  "name": "distancematrix",
+  "version": "1.0.0",
+  "description": "nodejs call google distance matrix api",
+  "main": "index.js",
+  "dependencies": {
+    "@googlemaps/google-maps-services-js": "^2.6.0",
+    "@types/node": "^13.13.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tanapattara",
+  "license": "ISC",
+  "type": "node",
+  "request": "launch",
+  "runtimeArgs": [
+    "-r",
+    "ts-node/register"
+  ],
+  "args": [
+    "${workspaceFolder}/index.ts"
+  ]
+}

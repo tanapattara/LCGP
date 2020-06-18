@@ -35,3 +35,6 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 .Rproj.user
+
+# Google distance matrix api node js project
+/DistanceMatrix/node_modules/
