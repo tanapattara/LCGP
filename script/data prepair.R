@@ -1,21 +1,6 @@
-# 1.Louvain algorithm and user characteristics based Collaborative Filtering
-# 2.Geographical distance
-# 3.Location popularity         
 
-# Data preparation 
-# Active users: Screen out users who have checked in less than 10 times;
-# Popular location: Screen out locations with less than 5 check-ins;
-# Social contact degree: Select users with more than 30 social contacts;
-
-library(readr)
-library(reshape2)
-library(data.table)
-library(dplyr)
-library(lsa)
-library(tidyr)
 
 # load data
-
 data_checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", 
                             "|", escape_double = FALSE, col_types = cols(created_at = col_character(), 
                                                                          id = col_integer(), user_id = col_integer(), 
@@ -125,38 +110,39 @@ data.venues <- subset(data.venues, select = -c(freq))
 # Add prefix to id
 data.ratings$user_id <- paste0('U',data.ratings$user_id)
 data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
+data.user$user_id <- paste0('U',data.user$user_id)
+data.venues$venue_id <- paste0('V',data.venues$venue_id)
 # change column name
 colnames(data.ratings) <- c("user_id", "venue_id", "rating")
 visualize_ratings(data.ratings = ratings)
+ratings <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="x"))
 
 # -----------------------------------------------------------------------------------------------------------------------
-# merge location between user and venue
-mergelocation = function(dfx,dfy){
-  df <- data.frame(NaN,NaN,NaN,NaN,NaN,NaN)
-  names(df) <- c("user_id","user_lat","user_lon","venue_id","venue_lat","venue_lon")
-  for(x in 1:nrow(dfx)){
-    rowx <- dfx[x,]
-    for(y in 1:nrow(dfy)){
-       rowy <- dfy[y,]
-       newrow <- data.frame(dfx[x,1],dfx[x,2],dfx[x,3],dfy[y,1],dfx[y,2],dfx[y,3])
-       names(newrow) <- c("user_id","user_lat","user_lon","venue_id","venue_lat","venue_lon")
-       df <- rbind(df, newrow)
-    }
-  }
-  df <- df %>% drop_na()
-  return(df)
-}
-data.distance <- mergelocation(data.user,data.venues)
-# -----------------------------------------------------------------------------------------------------------------------
-
-### Louvain algorithm and user characteristic based CF (LC)
-# similarity
-w <- as.data.frame(acast(data.ratings, venue_id~user_id,  value.var="rating"))
-# set na value to zero
-w[is.na(w)] <- 0
-
 rm(data_ratings,data_socialgraph,data_users,data_venues,data_checkins,x)
 gc()
 
+# -----------------------------------------------------------------------------------------------------------------------
+create.sample.data <- function(){
+  
+  V1000005 <- c(4,5,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN)
+  V1000097 <- c(NaN,NaN,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
+  V100017 <- c(NaN,NaN,NaN,NaN,NaN,5,3,3,NaN,NaN)
+  V100043 <- c(NaN,NaN,NaN,NaN,5,NaN,4,3,4,NaN)
+  V100048 <- c(NaN,NaN,NaN,NaN,NaN,4,5,4,NaN,5)
+  V100051 <- c(NaN,4,5,NaN,NaN,NaN,NaN,NaN,NaN,NaN)
+  V100057 <- c(4,NaN,5,3,NaN,NaN,NaN,NaN,NaN,NaN)
+  V10006 <- c(3,NaN,5,3,NaN,NaN,NaN,NaN,NaN,NaN)
+  V10007 <- c(4,2,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
+  V10011 <- c(NaN,4,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
+  # Join the variables to create a data frame
+  x <- data.frame(V1000005,V1000097,V100017,V100043,V100048,V100051,V100057,V10006,V10007,V10011)
+  rownames(x) = c('U1000235','U100053','U100070','U1001208','U100175','U100256','U10035','U1003659','U100366','U1004058')
+  # set na value to zero
+  # x[is.na(x)] <- 0
+  return(x)
+}
+
+# write csv
+# -----------------------------------------------------------------------------------------------------------------------
 write.csv(data.user,"D:\\user.csv", row.names = FALSE)
 write.csv(data.venues,"D:\\venue.csv", row.names = FALSE)
