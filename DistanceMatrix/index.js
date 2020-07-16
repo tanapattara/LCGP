@@ -9,7 +9,7 @@ client
       //destinations: ["San Francisco, CA"],
       origins: [{ lat: 45, lng: -110 }],
       destinations: [{ lat: 46, lng: -110 }],
-      key: "AIzaSyAVW5FvjFK1QGQe_Rpst6-SvDJ3oSykUJc",
+      key: "API-KEY",
     },
     timeout: 1000, // milliseconds
   })
