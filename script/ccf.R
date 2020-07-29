@@ -1,6 +1,6 @@
 # C => the users’ characteristics based recommendation rating for the target user i on location l
 # loop user
-characteristics.cf <- function(data, sim){
+get.ccf <- function(data, sim){
   df <- data.frame()
   tl <- vector()
   w <- sim$w

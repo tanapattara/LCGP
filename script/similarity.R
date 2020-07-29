@@ -1,4 +1,4 @@
-create.similarity <- function(x){
+get.similarity <- function(x){
   # create empty similarity weight matrix
   w <- matrix(0, nrow(x), nrow(x))
   w <- as.data.frame(w)

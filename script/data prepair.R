@@ -123,7 +123,6 @@ gc()
 
 # -----------------------------------------------------------------------------------------------------------------------
 create.sample.data <- function(){
-  
   V1000005 <- c(4,5,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN)
   V1000097 <- c(NaN,NaN,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
   V100017 <- c(NaN,NaN,NaN,NaN,NaN,5,3,3,NaN,NaN)
@@ -141,7 +140,7 @@ create.sample.data <- function(){
   # x[is.na(x)] <- 0
   return(x)
 }
-
+rm(create.sample.data)
 # write csv
 # -----------------------------------------------------------------------------------------------------------------------
 write.csv(data.user,"D:\\user.csv", row.names = FALSE)

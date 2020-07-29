@@ -4,21 +4,21 @@ library(data.table)
 library(dplyr)
 library(lsa)
 library(tidyr)
-
-ratings100 <- create.sample.data()
-w <- create.similarity(ratings100)
-lcgp <- characteristics.cf(ratings100, w)
-recommend <- recommendation(lcgp,data.user,data.venues)
-
 # setting R not use exponential notation
 options("scipen"=100)
-ratings <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="x"))
-testingData <- ratings[1:20,]
-validated <- lcgp.validation(testingData,data.user,data.venues)
+
+ratings100 <- create.sample.data()
+w <- get.similarity(ratings100)
+lcgp <- characteristics.cf(ratings100, w)
+recommend <- get.lcgp.prediction(lcgp, data.user, data.venues)
+
+ratings <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="rating"))
+df <- ratings[1:1000,]
+validated <- get.validation(df, data.user, data.venues)
 gc()
 
 # tenfold validation
-lcgp.validation <- function(df, location.user, location.venue){
+get.validation <- function(df, location.user, location.venue){
   
   # split data
   row <- nrow(df) * 90 / 100
@@ -26,54 +26,43 @@ lcgp.validation <- function(df, location.user, location.venue){
   # divide data
   df.train <- df[1:row,]
   df.test <- df[row:nrow(df),]
-  
-  df.precision = matrix(0, nrow(df.test), 5)
-  df.precision <- as.data.frame(df.precision)
-  
-  df.recall = matrix(0, nrow(df.test), 5)
-  df.recall <- as.data.frame(df.precision)
-  
-  precision <- vector()
-  recall <- vector()
-  
-  for(i in 1:nrow(df.test)){
-    # get active user row
-    active.user <- df.test[i,]
-    # at to training data
-    df.temp <- rbind(df.train, active.user)
-    # calculate similartity on df.temp
-    w <- create.similarity(df.temp)
-    # calculate cf on temp data
-    lcgp <- characteristics.cf(df.temp, w)
-    # predict rating
-    lcgp <- recommendation(lcgp,location.user,location.venue)
-    #lcgp <- recommendation(lcgp,data.user,data.venues)
+
+  #for(i in 1:nrow(df.test)){
+  active.i <- df.test[1]
+  prediction <- get.predictions(active.i, df.train)
+  #}
     
-    # validation
-    # get top n DESCENDING from active.user
-    active.topn <- active.user[order(-active.user)]
-    active.username <- row.names(active.user[1,])
-    # get active prediction from model
-    active.predicted <- lcgp$rating[active.username,]
-    active.topnp <- active.predicted[order(-active.predicted)]
+  # Validation
+  
+  # remove na column
+  x <- df.test[1]
+  x <- x[,colSums(is.na(x))<nrow(x)]
+  n <- ncol(x)  
+  
+  lcf <- prediction$lcf;
+  
+  sum <- 0
+  
+  # RMSE
+  for(i in 1:ncol(x)){
+    rname <- rownames(x)[1]
+    cname <- colnames(x)[i]
     
-    for(k in 2:5){
-      item.relevant <- get.item.relevant(active.topn)
-      item.recommend <- get.item.recommended(active.topnp,n = k)
-      
-      # precision
-      pc <- get.precision(item.relevant,item.recommend)
-      # recall
-      rc <- get.recall(item.relevant,item.recommend);
-      
-      # add to result
-      df.precision[i,k-1] = pc
-      df.recall[i,k-1] = rc
-    }
+    vx <- x[[cname]]
+    
+    predicted <- lcf[[rname]]
+    px <- predicted[[cname]]
+    
+    sum <- sum + ((px-vx)(px-vx))
   }
   
-  result <- list(precision = df.precision, recall = df.recall, train = df.train,test = df.test)
-  class(result) <- "lcgp"
+  rmse <- sqrt(sum/n)
+  
+  result <- list(rmse = rmse, 
+                 rating.lcgp = prediction$rating.lcgp,
+                 rating.lcf = prediction$rating.lcf)
+  
+  class(result) <- "recommendation"
   
   return(result)
 }
