@@ -107,6 +107,8 @@ data.user <- subset(data.user, select = -c(freq))
 data.venues <- merge(filter.venue, data_venues)
 data.venues <- subset(data.venues, select = -c(freq))
 
+#filter socialgraph
+
 # Add prefix to id
 data.ratings$user_id <- paste0('U',data.ratings$user_id)
 data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
@@ -117,8 +119,13 @@ colnames(data.ratings) <- c("user_id", "venue_id", "rating")
 visualize_ratings(data.ratings = ratings)
 ratings <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="x"))
 
+#add prefix to id
+data_socialgraph$first_user_id <- paste0('U', data_socialgraph$first_user_id)
+data_socialgraph$second_user_id <- paste0('U', data_socialgraph$second_user_id)
+data.socialgraph <- data_socialgraph
+
 # -----------------------------------------------------------------------------------------------------------------------
-rm(data_ratings,data_socialgraph,data_users,data_venues,data_checkins,x)
+rm(data_ratings,data_socialgraph,data_users,data_venues,data_checkins,data_socialgraph,x)
 gc()
 
 # -----------------------------------------------------------------------------------------------------------------------

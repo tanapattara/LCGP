@@ -28,7 +28,7 @@ get.validation <- function(df, location.user, location.venue){
   df.test <- df[row:nrow(df),]
 
   #for(i in 1:nrow(df.test)){
-  active.i <- df.test[1]
+  active.i <- df.test[1,]
   prediction <- get.predictions(active.i, df.train)
   #}
     

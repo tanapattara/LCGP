@@ -2,8 +2,8 @@ get.predictions <- function(df.active, df.train){
   # merge data
   df.merge <- rbind(df.active, df.train)
   # create lcgp class
-  w <- get.similarity(df.merge)
-  lcgp <- get.ccf(df.merge, w)
+  sim <- get.similarity(df.merge)
+  lcgp <- get.ccf(df.merge, sim$w)
   # get lcgp recommendation
   result <- get.lcgp.prediction(lcgp, data.user, data.venues)
 }
@@ -22,13 +22,13 @@ get.lcgp.prediction <- function(lcgp,location.user, location.venue){
       venueid <- names(c[l])
       
       # get location
-      user <- location.user[location.user[,"user_id"] == userid,]
-      venue <- location.venue[location.venue[,"venue_id"] == venueid,]
-      g <- get.geo_distance(user[,3],user[,2],venue[,3],venue[,2])
-      gl <- 0.1668 * (g ^ -0.9463)
+      # user <- location.user[location.user[,"user_id"] == userid,]
+      # venue <- location.venue[location.venue[,"venue_id"] == venueid,]
+      # g <- get.geo_distance(user[,3],user[,2],venue[,3],venue[,2])
+      # gl <- 0.1668 * (g ^ -0.9463)
       cil <- c[i,l]
       popularl <- pl[l]
-      ratingil <- (0.3 * cil) + (0.3 * gl) + (0.4 * popularl)
+      ratingil <- (0.3 * cil) # + (0.3 * gl) + (0.4 * popularl)
       rf[i,l] <- ratingil
       r[i,l] <- cil
     }
