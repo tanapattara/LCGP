@@ -37,6 +37,7 @@ vignettes/*.pdf
 .Rproj.user
 
 # Google distance matrix api node js project
-/DistanceMatrix/node_modules/
-/PlaceAPI-Node/node_modules/
-PlaceAPI-Node/.env
+DistanceMatrix/node_modules/
+DistanceMatrix/.env
+FQ_PlaceAPI/.env
+FQ_PlaceAPI/node_modules/

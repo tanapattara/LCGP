@@ -1,4 +1,3 @@
-library(readr)
 library(reshape2)
 library(data.table)
 library(dplyr)
@@ -35,7 +34,7 @@ get.validation <- function(df, location.user, location.venue){
   # Validation
   
   # remove na column
-  x <- df.test[1]
+  x <- df.test[1,]
   x <- x[,colSums(is.na(x))<nrow(x)]
   n <- ncol(x)  
   
@@ -53,7 +52,7 @@ get.validation <- function(df, location.user, location.venue){
     predicted <- lcf[[rname]]
     px <- predicted[[cname]]
     
-    sum <- sum + ((px-vx)(px-vx))
+    sum <- sum + ((px-vx)*(px-vx))
   }
   
   rmse <- sqrt(sum/n)

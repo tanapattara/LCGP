@@ -7,6 +7,7 @@ get.predictions <- function(df.active, df.train){
   # get lcgp recommendation
   result <- get.lcgp.prediction(lcgp, data.user, data.venues)
 }
+
 get.lcgp.prediction <- function(lcgp,location.user, location.venue){
   c <- lcgp$c
   pl <- lcgp$p
@@ -43,4 +44,15 @@ get.lcgp.prediction <- function(lcgp,location.user, location.venue){
   class(result) <- "lcgp"
   
   return(result)
+}
+get.cl.prediction <- function(train, test){
+  
+  return
+}
+
+get.traintest <- function(df){
+  
+}
+get.rms <- function(){
+  
 }

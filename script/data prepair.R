@@ -1,134 +1,141 @@
-
+library(readr)
+library(dplyr)
 
 # load data
-data_checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", 
+raw.checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", 
                             "|", escape_double = FALSE, col_types = cols(created_at = col_character(), 
                                                                          id = col_integer(), user_id = col_integer(), 
                                                                          venue_id = col_integer()), trim_ws = TRUE)
-data_checkins = data_checkins[rowSums(is.na(data_checkins[ , 1])) == 0, ]
+raw.checkins = raw.checkins[rowSums(is.na(raw.checkins[ , 1])) == 0, ]
 
-data_socialgraph <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/socialgraph.dat", "|",
+raw.socialgraph <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/socialgraph.dat", "|",
                                escape_double = FALSE, 
                                col_types = cols(first_user_id = col_integer(), second_user_id = col_integer()), 
                                trim_ws = TRUE)
 
-data_socialgraph <- data_socialgraph[rowSums(is.na(data_socialgraph[ , 1])) == 0,]
+raw.socialgraph <- raw.socialgraph[rowSums(is.na(raw.socialgraph[ , 1])) == 0,]
+raw.socialgraph <- distinct(raw.socialgraph)
 
-data_venues <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/venues.dat", 
+raw.venues <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/venues.dat", 
                           "|", escape_double = FALSE, col_types = cols(id = col_integer()), 
                           trim_ws = TRUE)
-data_venues <- data_venues %>% drop_na()
-colnames(data_venues) <- c('venue_id','latitude','longitude')
-data_venues = data_venues[rowSums(is.na(data_venues[ , 1:3])) == 0,]
+colnames(raw.venues) <- c('venue_id','latitude','longitude')
+raw.venues = raw.venues[rowSums(is.na(raw.venues[ , 1:3])) == 0,]
 
-data_users <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/users.dat", 
+raw.users <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/users.dat", 
                          "|", escape_double = FALSE, col_types = cols(id = col_integer()), 
                          trim_ws = TRUE)
-data_users <- data_users %>% drop_na()
-colnames(data_users) <- c('user_id','latitude','longitude')
-data_users = data_users[rowSums(is.na(data_users[ , 1:3])) == 0,]
+colnames(raw.users) <- c('user_id','latitude','longitude')
+raw.users = raw.users[rowSums(is.na(raw.users[ , 1:3])) == 0,]
 
-data_ratings <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/ratings.dat", 
+raw.ratings <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/ratings.dat", 
                            "|", escape_double = FALSE, col_types = cols(user_id = col_integer(), 
                                                                         venue_id = col_integer()), trim_ws = TRUE)
 
-data_ratings <- data_ratings[rowSums(is.na(data_ratings[ , 1])) == 0,]
+raw.ratings <- raw.ratings[rowSums(is.na(raw.ratings[ , 1])) == 0,]
 
-# merge duplicate checkin data by mean function 
-data_ratings <- aggregate(data_ratings$rating, 
-                          by=list(user_id=data_ratings$user_id, venue_id=data_ratings$venue_id), 
-                          data=data_ratings,
+# merge duplicate checkin data by mean function
+
+raw.ratings <- aggregate(raw.ratings$rating, 
+                          by=list(user_id=raw.ratings$user_id, venue_id=raw.ratings$venue_id), 
+                          data=raw.ratings,
                           FUN=mean)
+colnames(raw.ratings) <- c("user_id", "venue_id", "rating")
 
-#----------------------------------------------------------------------------------------------------------------------------
+# Add prefix --------------------------------------------------------------------------------
+raw.ratings$user_id <- paste0('U',raw.ratings$user_id)
+raw.ratings$venue_id <- paste0('V',raw.ratings$venue_id)
 
-#### Active users: 
-# Screen out users who have checked in less than 10 times;
-filter.user <- data.frame(table(data_checkins$user_id))
+raw.users$user_id <- paste0('U',raw.users$user_id)
+raw.venues$venue_id <- paste0('V',raw.venues$venue_id)
+
+raw.checkins$user_id <- paste0('U',raw.checkins$user_id)
+raw.checkins$venue_id <- paste0('V',raw.checkins$venue_id)
+
+raw.socialgraph$first_user_id <- paste0('U', raw.socialgraph$first_user_id)
+raw.socialgraph$second_user_id <- paste0('U', raw.socialgraph$second_user_id)
+
+#-----------------------------------------------------------------------------------------------------------------------
+data.checkins <- raw.checkins
+data.socialgraph <- raw.socialgraph
+data.user <- raw.users
+data.venues <- raw.venues
+# ----------------------------------------------------------------------------------------------------------------------
+
+# filter checkin data base from user_id wirh user freq raing more than 10
+data.ratings <- raw.ratings
+
+filter.user <- data.frame(table(data.ratings$user_id))
 colnames(filter.user) <- c("user_id", "freq")
-# filter user checkin frequency more than 10
-filter.user <- filter.user[(filter.user$freq > 9),]
-
-### Popular location: 
-# Screen out locations with less than 5 check-ins;
-filter.venue <- data.frame(table(data_checkins$venue_id))
+filter.venue <- data.frame(table(data.ratings$venue_id))
 colnames(filter.venue) <- c("venue_id", "freq")
-# filter venue checkin frequency more than 5 check-ins
+
+filter.user <- filter.user[(filter.user$freq > 4),]
 filter.venue <- filter.venue[(filter.venue$freq > 4),]
 
-### Social contact degree: 
-filter.socialgraph <- data.frame(table(data_socialgraph$first_user_id))
-colnames(filter.socialgraph) <- c("user_id", "freq")
-# filter user relation frequency more than 30 check-ins
-filter.socialgraph <- filter.socialgraph[(filter.socialgraph$freq > 30),]
 
-# ----------------------------------------------------------------------------------------------------------------------
 
-# filter checkin data base from user_id wirh user freq checkin more than 10
-data.checkins <- merge(data_checkins, filter.user, by.data_checkins = "user_id", by.filter.user = "user_id")
-# remove column id
-data.checkins <- subset(data.checkins, select = -c(id))
-data.checkins <- subset(data.checkins, select = -c(freq))
-
-# filter checkin data base from venue frequency more than 5 check-ins
-data.checkins <- merge(data.checkins, filter.venue, by.data.checkins = "venue_id", by.filter.venue = "venue_id")
-# remove column freq
-data.checkins <- subset(data.checkins, select = -c(freq))
-
-# filter checkin data base from socialgraph frequency more than 30 contract
-data.checkins <- merge(data.checkins, filter.socialgraph, by.data.checkins = "user_id", by.filter.socialgraph = "user_id")
-# remove column freq
-data.checkins <- subset(data.checkins, select = -c(freq))
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-# filter checkin data base from user_id wirh user freq checkin more than 10
-data.ratings <- merge(data_ratings, filter.user, data_ratings = "user_id", by.filter.user = "user_id")
-data.ratings <- subset(data.ratings, select = -c(id))
+data.ratings <- merge(data.ratings, filter.user, data.ratings = "user_id", by.filter.user = "user_id")
 data.ratings <- subset(data.ratings, select = -c(freq))
 
-# filter checkin data base from venue frequency more than 5 check-ins
-data.ratings <- merge(data.ratings, filter.venue, data.ratings = "venue_id", by.filter.venue = "venue_id")
+data.ratings <- merge(data.ratings, filter.venue, data.ratings = "venue_id", filter.venue = "venue_id")
 data.ratings <- subset(data.ratings, select = -c(freq))
 
-# filter checkin data base from socialgraph frequency more than 30 contract
-data.ratings <- merge(data.ratings, filter.socialgraph, data.ratings = "user_id", by.filter.socialgraph = "user_id")
-data.ratings <- subset(data.ratings, select = -c(freq))
+hist(filter.user$freq,
+     main="Histogram for user rating frequency",
+     xlab="Frequency",
+     border="blue",
+     col="yellow",
+     xlim=c(10,100),
+     las=1,
+     breaks=200)
 
+hist(filter.venue$freq,
+     main="Histogram for venue rating frequency",
+     xlab="Frequency",
+     border="blue",
+     col="yellow",
+     xlim=c(10,100),
+     las=1,
+     breaks=200)
 
-#filter user location data
-data.user <- merge(filter.user, data_users)
-data.user <- subset(data.user, select = -c(freq))
-#filter user with socialgraph
-data.user <- merge(filter.socialgraph, data.user)
-data.user <- subset(data.user, select = -c(freq))
+# re-order column
+data.ratings <- data.ratings[c("user_id", "venue_id", "rating")]
 
-#filter venues with checkin
-data.venues <- merge(filter.venue, data_venues)
-data.venues <- subset(data.venues, select = -c(freq))
+# -----------------------------------------------------------------------------------------------------------------------
+# filter social graph
 
-#filter socialgraph
+data.socialgraph <- raw.socialgraph
+filter.social <- data.frame(table(data.socialgraph$first_user_id))
+colnames(filter.social) <- c("user", "freq")
 
-# Add prefix to id
-data.ratings$user_id <- paste0('U',data.ratings$user_id)
-data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
-data.user$user_id <- paste0('U',data.user$user_id)
-data.venues$venue_id <- paste0('V',data.venues$venue_id)
+filter.social <- filter.social[(filter.social$freq > 4),]
+
+# -----------------------------------------------------------------------------------------------------------------------
+
 # change column name
 colnames(data.ratings) <- c("user_id", "venue_id", "rating")
 visualize_ratings(data.ratings = ratings)
-ratings <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="x"))
-
-#add prefix to id
-data_socialgraph$first_user_id <- paste0('U', data_socialgraph$first_user_id)
-data_socialgraph$second_user_id <- paste0('U', data_socialgraph$second_user_id)
-data.socialgraph <- data_socialgraph
+library(reshape2)
+ratingsDF <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="rating"))
 
 # -----------------------------------------------------------------------------------------------------------------------
-rm(data_ratings,data_socialgraph,data_users,data_venues,data_checkins,data_socialgraph,x)
+rm(raw.ratings,raw.socialgraph,raw.users,raw.venues,raw.checkins)
+rm(filter.user,filter.venue,filter.socialgraph)
 gc()
 
 # -----------------------------------------------------------------------------------------------------------------------
+filtering.rating <- function(df, nu, nv){
+  
+  df.user <- data.frame(table(df$user_id))
+  colnames(df.user) <- c("user_id", "freq")
+  df.user <- df.user[(df.user$freq > nu),]
+  
+  df.venue <- data.frame(table(df$venue_id))
+  colnames(df.venue) <- c("venue_id", "freq")
+  df.venue <- df.venue[(df.venue$freq > nv),]
+  
+}
 create.sample.data <- function(){
   V1000005 <- c(4,5,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN)
   V1000097 <- c(NaN,NaN,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
@@ -151,4 +158,4 @@ rm(create.sample.data)
 # write csv
 # -----------------------------------------------------------------------------------------------------------------------
 write.csv(data.user,"D:\\user.csv", row.names = FALSE)
-write.csv(data.venues,"D:\\venue.csv", row.names = FALSE)
+write.csv(data_venues,"C:\\Users\\dell\\Desktop\\venue_sample.csv", row.names = FALSE)
