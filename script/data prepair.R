@@ -73,8 +73,6 @@ colnames(filter.venue) <- c("venue_id", "freq")
 filter.user <- filter.user[(filter.user$freq > 4),]
 filter.venue <- filter.venue[(filter.venue$freq > 4),]
 
-
-
 data.ratings <- merge(data.ratings, filter.user, data.ratings = "user_id", by.filter.user = "user_id")
 data.ratings <- subset(data.ratings, select = -c(freq))
 
@@ -101,7 +99,10 @@ hist(filter.venue$freq,
 
 # re-order column
 data.ratings <- data.ratings[c("user_id", "venue_id", "rating")]
+data.ratings$user_id <- paste0('U',data.ratings$user_id)
+data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
 
+ratingDF <- as.data.frame(acast(data.ratings, user_id~venue_id, value.var="rating"))
 # -----------------------------------------------------------------------------------------------------------------------
 # filter social graph
 
@@ -115,7 +116,6 @@ filter.social <- filter.social[(filter.social$freq > 4),]
 
 # change column name
 colnames(data.ratings) <- c("user_id", "venue_id", "rating")
-visualize_ratings(data.ratings = ratings)
 library(reshape2)
 ratingsDF <- as.data.frame(acast(data.ratings, user_id~venue_id,  value.var="rating"))
 
