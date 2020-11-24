@@ -31,6 +31,9 @@ getSocialRecommend <- function(){
       social_friend_active_rating <- data.ratings
       social_friend_active_rating <- social_friend_active_rating[social_friend_active_rating$user_id == social_friend_active$second_user_id,]
       
+      if(nrow(social_friend_active_rating) == 0)
+        next
+      
       if(j == 1){
         socials <- social_friend_active_rating
       }else{
