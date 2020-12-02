@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(ggplot2)
 
 # load data
 raw.checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", 
@@ -70,21 +71,19 @@ colnames(filter.user) <- c("user_id", "freq")
 filter.venue <- data.frame(table(data.ratings$venue_id))
 colnames(filter.venue) <- c("venue_id", "freq")
 
-filter.user <- filter.user[(filter.user$freq > 4),]
-filter.venue <- filter.venue[(filter.venue$freq > 4),]
+filter.user <- filter.user[(filter.user$freq < 3),]
+filter.venue <- filter.venue[(filter.venue$freq < 3),]
 
-data.ratings <- merge(data.ratings, filter.user, data.ratings = "user_id", by.filter.user = "user_id")
-data.ratings <- subset(data.ratings, select = -c(freq))
+data.ratings <- data.ratings[!(data.ratings$user_id %in% filter.user$user_id),]
+data.ratings <- data.ratings[!(data.ratings$venue_id %in% filter.venue$venue_id),]
 
-data.ratings <- merge(data.ratings, filter.venue, data.ratings = "venue_id", filter.venue = "venue_id")
-data.ratings <- subset(data.ratings, select = -c(freq))
 
 hist(filter.user$freq,
      main="Histogram for user rating frequency",
      xlab="Frequency",
      border="blue",
      col="yellow",
-     xlim=c(10,100),
+     xlim=c(10,50),
      las=1,
      breaks=200)
 
@@ -103,6 +102,10 @@ data.ratings$user_id <- paste0('U',data.ratings$user_id)
 data.ratings$venue_id <- paste0('V',data.ratings$venue_id)
 
 ratingDF <- as.data.frame(acast(data.ratings, user_id~venue_id, value.var="rating"))
+ratingDF <- data.matrix(ratingDF)
+
+heatmap(ratingDF)
+
 # -----------------------------------------------------------------------------------------------------------------------
 # filter social graph
 
@@ -125,17 +128,7 @@ rm(filter.user,filter.venue,filter.socialgraph)
 gc()
 
 # -----------------------------------------------------------------------------------------------------------------------
-filtering.rating <- function(df, nu, nv){
-  
-  df.user <- data.frame(table(df$user_id))
-  colnames(df.user) <- c("user_id", "freq")
-  df.user <- df.user[(df.user$freq > nu),]
-  
-  df.venue <- data.frame(table(df$venue_id))
-  colnames(df.venue) <- c("venue_id", "freq")
-  df.venue <- df.venue[(df.venue$freq > nv),]
-  
-}
+
 create.sample.data <- function(){
   V1000005 <- c(4,5,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN)
   V1000097 <- c(NaN,NaN,NaN,3,NaN,NaN,NaN,NaN,NaN,NaN)
@@ -157,5 +150,6 @@ create.sample.data <- function(){
 rm(create.sample.data)
 # write csv
 # -----------------------------------------------------------------------------------------------------------------------
-write.csv(data.user,"D:\\user.csv", row.names = FALSE)
-write.csv(data_venues,"C:\\Users\\dell\\Desktop\\venue_sample.csv", row.names = FALSE)
+
+write.csv(y,"C:\\Users\\dell\\Desktop\\y", row.names = FALSE)
+write.csv(z,"C:\\Users\\dell\\Desktop\\z", row.names = FALSE)
