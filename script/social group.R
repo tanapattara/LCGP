@@ -282,7 +282,7 @@ getCFRecommendation <- function(){
     active <- error[i,]
     
     # find best similarity
-    sim.best <- sim[sim$active_user %in% active$user_id,]
+    sim.best <- social.sim[social.sim$active_user %in% active$user_id,]
     sim.best <- sim.best %>% filter(sim_active_u > 0.1)
     
     if(nrow(sim.best) == 0){

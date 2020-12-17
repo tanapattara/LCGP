@@ -54,7 +54,7 @@ getClusterRecommendation <- function(){
   progressbar <- txtProgressBar(min = 0, max = progressbar.max, style = 3)
   
   for(i in 1:nrow(activeDF)){
-    user.a <- activeDF[1,]
+    user.a <- activeDF[i,]
     
     user.cluster <- data.checkings.clustered[data.checkings.clustered$user_id == user.a$user_id & data.checkings.clustered$venue_id == user.a$venue_id,]
     
@@ -65,6 +65,7 @@ getClusterRecommendation <- function(){
     if(nrow(user.cluster) == 0){
       # no user checkin
       user.cluster <- data.checkings.clustered[data.checkings.clustered$user_id == user.a$user_id,]
+      
       if(nrow(user.cluster) == 0){
         list.cluster <- list.add(list.cluster, NaN)
         list.cluster.mean <- list.add(list.cluster.mean, NaN)
@@ -140,8 +141,14 @@ getSimilarityFromTarget <- function(df){
     active.rating.non.active.venue <- active.rating[!active.rating$venue_id == a$venue_id,]
     # find mean of active user
     
-    if(nrow(active.rating.non.active.venue) == 0)
+    if(nrow(active.rating.non.active.venue) == 0){
+      list.a <- list.add(list.a, a$user_id)
+      list.b <- list.add(list.b, a$user_id)
+      list.v <- list.add(list.v, a$venue_id)
+      list.r <- list.add(list.r, NaN)
+      list.sim <- list.add(list.sim, NaN)
       next
+    }
     
     active.mean <- getMeanofUserRating(active.rating.non.active.venue)
     # find a.sqrt
@@ -249,5 +256,54 @@ getSimilarityFromTarget <- function(df){
   
 }
 
-cf <- getSimilarityFromTarget(y$ClusterRating)
+# cluster.sim <- getSimilarityFromTarget(y$ClusterRating)
+
+getClusterCFRecommendation <- function(){
+  
+  list.rating <- vector()
+  list.error <- vector()
+  
+  progressbar.max <- nrow(cluster.mean)
+  progressbar <- txtProgressBar(min = 0, max = progressbar.max, style = 3)
+  
+  for(i in 1:nrow(cluster.mean)){
+    #loop for all error data
+    active <- cluster.mean[i,]
+    
+    # find best similarity
+    sim.best <- cluster.sim[social.sim$active_user %in% active$user_id,]
+    sim.best <- sim.best %>% filter(sim_active_u > 0.1)
+    
+    if(nrow(sim.best) == 0){
+      list.rating <- list.add(list.rating, NaN)
+      list.error <- list.add(list.error, NaN)
+      next
+    }else{
+      #loop on sim.best to predict rating
+      sum <- 0
+      sum.sim <- 0
+      for(j in 1:nrow(sim.best)){
+        u <- sim.best[j,]
+        sum <- sum + (u$rating * u$sim_active_u)
+        sum.sim <- sum.sim + u$sim_active_u
+      }
+      
+      r <- sum / sum.sim
+      e <- ((active$user_rating - r) ^ 2) 
+      
+      list.rating <- list.add(list.rating, r)
+      list.error <- list.add(list.error, e)
+    }
+    
+    setTxtProgressBar(progressbar, i)
+  }# end of i
+  
+  close(progressbar)
+  
+  df <- error
+  df['sim_rating'] <- list.rating
+  df['sim_error'] <- list.error
+  
+  return(df)
+}
 
