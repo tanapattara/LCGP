@@ -1,13 +1,21 @@
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(lubridate)
 
 # load data
 raw.checkins <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/checkins.dat", 
-                            "|", escape_double = FALSE, col_types = cols(created_at = col_character(), 
-                                                                         id = col_integer(), user_id = col_integer(), 
-                                                                         venue_id = col_integer()), trim_ws = TRUE)
-raw.checkins = raw.checkins[rowSums(is.na(raw.checkins[ , 1])) == 0, ]
+                       "|", escape_double = FALSE, col_types = cols(created_at = col_datetime(format = "%Y-%m-%d %H:%M:%S")), 
+                       trim_ws = TRUE)
+raw.checkins = raw.checkins[rowSums(is.na(raw.checkins[ ,2:3])) == 0, ]
+raw.checkins <- subset(raw.checkins, select = -c(id, latitude, longitude))
+raw.checkins$Year <- factor(year(raw.checkins$created_at))
+raw.checkins$Month <- factor(month(raw.checkins$created_at))
+raw.checkins$Day <- factor(day(raw.checkins$created_at))
+raw.checkins$Weekday <- factor(wday(raw.checkins$created_at))
+raw.checkins$Hour <- factor(hour(raw.checkins$created_at))
+raw.checkins$Minute <- factor(minute(raw.checkins$created_at))
+raw.checkins$Second <- factor(second(raw.checkins$created_at))
 
 raw.socialgraph <- read_delim("G:/My Drive/Research/Data/Dataset/data_umn_foursquare_datasets/socialgraph.dat", "|",
                                escape_double = FALSE, 
