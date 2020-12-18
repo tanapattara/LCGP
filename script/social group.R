@@ -38,6 +38,8 @@ getSocialRecommend <- function(){
   for(i in 1:nrow(test_data)){
     active <- test_data[i,]
     
+    setTxtProgressBar(progressbar, i)
+    
     social <- raw.socialgraph[raw.socialgraph$first_user_id == active$user_id,]
     socials <- data.frame(matrix(ncol=3,nrow=0, dimnames=list(NULL, c("user_id", "venue_id", "rating"))))
     
@@ -119,7 +121,6 @@ getSocialRecommend <- function(){
     if(n == 0)
       next
     
-    setTxtProgressBar(progressbar, i)
   } # end of test data
   
   close(progressbar)
@@ -134,7 +135,6 @@ getSocialRecommend <- function(){
   
   return(result)
 }
-
 
 getSimilarity <- function(){
   
@@ -151,7 +151,9 @@ getSimilarity <- function(){
   
   for(i in 1:nrow(activeDF)){
     a <- activeDF[i,]
-
+    
+    setTxtProgressBar(progressbar, i)
+    
     if(a$user_id %in% list.a)
       next
     
@@ -254,7 +256,7 @@ getSimilarity <- function(){
       list.sim <- list.add(list.sim, sim.a.u)
     } # end of j
     
-    setTxtProgressBar(progressbar, i)
+    
   }# end of i
   
   close(progressbar)
@@ -265,7 +267,6 @@ getSimilarity <- function(){
   return(result)
 }
 
-
 # sim <- getSimilarity()
 
 getCFRecommendation <- function(){
@@ -273,13 +274,14 @@ getCFRecommendation <- function(){
   list.rating <- vector()
   list.error <- vector()
   
-  
   progressbar.max <- nrow(error)
   progressbar <- txtProgressBar(min = 0, max = progressbar.max, style = 3)
   
   for(i in 1:nrow(error)){
     #loop for all error data
     active <- error[i,]
+    
+    setTxtProgressBar(progressbar, i)
     
     # find best similarity
     sim.best <- social.sim[social.sim$active_user %in% active$user_id,]
@@ -306,7 +308,6 @@ getCFRecommendation <- function(){
       list.error <- list.add(list.error, e)
     }
     
-    setTxtProgressBar(progressbar, i)
   }# end of i
   
   close(progressbar)

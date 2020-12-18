@@ -91,9 +91,9 @@ hist(filter.user$freq,
      xlab="Frequency",
      border="blue",
      col="yellow",
-     xlim=c(10,50),
+     xlim=c(5,10),
      las=1,
-     breaks=200)
+     breaks=10)
 
 hist(filter.venue$freq,
      main="Histogram for venue rating frequency",

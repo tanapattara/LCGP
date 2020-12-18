@@ -55,7 +55,7 @@ getClusterRecommendation <- function(){
   
   for(i in 1:nrow(activeDF)){
     user.a <- activeDF[i,]
-    
+    setTxtProgressBar(progressbar, i)
     user.cluster <- data.checkings.clustered[data.checkings.clustered$user_id == user.a$user_id & data.checkings.clustered$venue_id == user.a$venue_id,]
     
     list.a <- list.add(list.a, user.a$user_id)
@@ -98,8 +98,6 @@ getClusterRecommendation <- function(){
       list.cluster <- list.add(list.cluster, user.a.cluster)
       list.cluster.mean <- list.add(list.cluster.mean, venue.target.rating$mean)
       list.cluster.error <- list.add(list.cluster.error, error.cluster)
-      
-      setTxtProgressBar(progressbar, i)
   }# end for loop
   
   close(progressbar)
@@ -117,8 +115,8 @@ getClusterRecommendation <- function(){
 
 getSimilarityFromTarget <- function(df){
   
-  activeDF <- error %>% select('user_id','venue_id', 'user_rating')
-  df <- y$ClusterRating
+  activeDF <- error # %>% select('user_id','venue_id', 'user_rating')
+  df <- clusterModel$ClusterRating
   
   list.a <- vector()
   list.b <- vector()
@@ -131,6 +129,8 @@ getSimilarityFromTarget <- function(df){
   
   for(i in 1:nrow(activeDF)){
     a <- activeDF[i,]
+    
+    setTxtProgressBar(progressbar, i)
     
     if(a$user_id %in% list.a)
       next
@@ -172,10 +172,14 @@ getSimilarityFromTarget <- function(df){
     # find exist target active venue
     target.venue <- df[df$venue_id == a$venue_id,]
     
+    if(nrow(target.venue) == 0)
+      next
+    
     # loop all user to find similarity
     # from target venue
     for(j in 1:nrow(target.venue)){
       u <- target.venue[j,]
+      
       
       if(u$user_id == a$user_id)
         next
@@ -244,7 +248,7 @@ getSimilarityFromTarget <- function(df){
       list.sim <- list.add(list.sim, sim.a.u)
     } # end of j
     
-    setTxtProgressBar(progressbar, i)
+   
   }# end of i
   
   close(progressbar)
@@ -256,7 +260,7 @@ getSimilarityFromTarget <- function(df){
   
 }
 
-# cluster.sim <- getSimilarityFromTarget(y$ClusterRating)
+cluster.sim <- getSimilarityFromTarget(cluster.rating)
 
 getClusterCFRecommendation <- function(){
   
@@ -267,6 +271,7 @@ getClusterCFRecommendation <- function(){
   progressbar <- txtProgressBar(min = 0, max = progressbar.max, style = 3)
   
   for(i in 1:nrow(cluster.mean)){
+    setTxtProgressBar(progressbar, i)
     #loop for all error data
     active <- cluster.mean[i,]
     
@@ -295,15 +300,16 @@ getClusterCFRecommendation <- function(){
       list.error <- list.add(list.error, e)
     }
     
-    setTxtProgressBar(progressbar, i)
+    
   }# end of i
   
   close(progressbar)
   
   df <- error
-  df['sim_rating'] <- list.rating
-  df['sim_error'] <- list.error
+  df['cluster_rating'] <- list.rating
+  df['cluster_error'] <- list.error
   
   return(df)
 }
 
+# cluster.cf <- getClusterCFRecommendation()
